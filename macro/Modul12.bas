@@ -325,13 +325,13 @@ Private Declare PtrSafe Function daveReadBits Lib "libnodave.dll" (ByVal dc As L
 '
 Private Declare PtrSafe Function daveWriteBits Lib "libnodave.dll" (ByVal dc As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long, ByRef buffer As Long) As Long
 '
-' Set a bit in PLC to 1.
+' Set a bit in PLC to 1. pb: deleted start parameter
 '
-Private Declare PtrSafe Function daveSetBit Lib "libnodave.dll" (ByVal dc As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal byteAddress As Long, ByVal bitAddress As Long) As Long
+Private Declare PtrSafe Function daveSetBit Lib "libnodave.dll" (ByVal dc As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal byteAddress As Long, ByVal bitAddress As Long) As Long
 '
-' Set a bit in PLC to 0.
+' Set a bit in PLC to 0. pb: deleted start parameter
 '
-Private Declare PtrSafe Function daveClrBit Lib "libnodave.dll" (ByVal dc As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal byteAddress As Long, ByVal bitAddress As Long) As Long
+Private Declare PtrSafe Function daveClrBit Lib "libnodave.dll" (ByVal dc As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal byteAddress As Long, ByVal bitAddress As Long) As Long
 '
 ' Read a diagnostic list (SZL) from PLC. Does NOT work with 200 family.
 '
@@ -762,6 +762,8 @@ Sub WriteFromPLC()
     Dim TagName As String, TagAdress As String, TagType_array() As String, TagCompare As String
     Dim buffer As Byte, buffer1 As Byte, buffer2 As Byte, buffer3 As Byte
     Dim bfbyte As Byte, bitStat As Integer, bitPos As Byte
+    Dim areaNum As Long
+    areaNum = 0 'variable for real i/o
     
     iRow = 3
     addrBit2 = 0
@@ -854,7 +856,35 @@ Sub WriteFromPLC()
                 Else
                 End If
                  
- '--------------------------------Write real data--------------------------------------
+ '--------------------------------Write input data--------------------------------------
+            ElseIf InStr(TagType_array(0), "I") > 0 Then
+                addrOffset = Replace(TagType_array(0), "I", "")                             'Delete unnecessary Prefix in address
+                addrBit = TagType_array(1)
+                                
+                If Not IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)) Then     'check if cell is not empty
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+                    If value = True Then
+                        res2 = daveSetBit(dc, daveInputs, areaNum, addrOffset, addrBit)  'set bit
+                    ElseIf value = False Then
+                        res2 = daveClrBit(dc, daveInputs, areaNum, addrOffset, addrBit)  'reset bit
+                    End If
+                End If
+                
+'--------------------------------Write output data--------------------------------------
+            ElseIf InStr(TagType_array(0), "Q") > 0 Then
+                addrOffset = Replace(TagType_array(0), "Q", "")                             'Delete unnecessary Prefix in address
+                addrBit = TagType_array(1)
+                                
+                If Not IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)) Then     'check if cell is not empty
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+                    If value = True Then
+                        res2 = daveSetBit(dc, daveOutputs, areaNum, addrOffset, addrBit)  'set bit
+                    ElseIf value = False Then
+                        res2 = daveClrBit(dc, daveOutputs, areaNum, addrOffset, addrBit)  'reset bit
+                    End If
+                End If
+                
+ '--------------------------------Write dint data--------------------------------------
             Else
                 If InStr(TagType_array(1), "DBDW") > 0 Then
                     addrOffset = Replace(TagType_array(1), "DBDW", "")
