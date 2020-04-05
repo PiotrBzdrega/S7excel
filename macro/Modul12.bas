@@ -164,7 +164,7 @@ Private Declare PtrSafe Sub daveStringCopy Lib "libnodave.dll" (ByVal internalPo
 '
 ' Setup a new interface structure using a handle to an open port or socket:
 '
-Private Declare PtrSafe Function daveNewInterface Lib "libnodave.dll" (ByVal fd1 As Long, ByVal fd2 As Long, ByVal name As String, ByVal localMPI As Long, ByVal protocol As Long, ByVal speed As Long) As Long
+Private Declare PtrSafe Function daveNewInterface Lib "libnodave.dll" (ByVal fd1 As Long, ByVal fd2 As Long, ByVal Name As String, ByVal localMPI As Long, ByVal protocol As Long, ByVal speed As Long) As Long
 '
 ' Setup a new connection structure using an initialized daveInterface and PLC's MPI address.
 ' Note: The parameter di must have been obtained from daveNewinterface.
@@ -186,7 +186,7 @@ Private Declare PtrSafe Function daveGetResponse Lib "libnodave.dll" (ByVal dc A
 '    Note: The parameter dc must have been obtained from daveNewConnection,
 '          The parameter pdu must have been obtained from daveNewPDU.
 '
-Private Declare PtrSafe Function daveSendMessage Lib "libnodave.dll" (ByVal dc As Long, ByVal pdu As Long) As Long
+Private Declare PtrSafe Function daveSendMessage Lib "libnodave.dll" (ByVal dc As Long, ByVal Pdu As Long) As Long
 '******
 '
 'Utilities:
@@ -195,11 +195,11 @@ Private Declare PtrSafe Function daveSendMessage Lib "libnodave.dll" (ByVal dc A
 '*
 '    Hex dump PDU:
 '
-Private Declare PtrSafe Sub daveDumpPDU Lib "libnodave.dll" (ByVal pdu As Long)
+Private Declare PtrSafe Sub daveDumpPDU Lib "libnodave.dll" (ByVal Pdu As Long)
 '
 '    Hex dump. Write the name followed by len bytes written in hex and a newline:
 '
-Private Declare PtrSafe Sub daveDump Lib "libnodave.dll" (ByVal name As String, ByVal pdu As Long, ByVal length As Long)
+Private Declare PtrSafe Sub daveDump Lib "libnodave.dll" (ByVal Name As String, ByVal Pdu As Long, ByVal length As Long)
 '
 '    names for PLC objects. This is again the intenal function. Use the wrapper code below.
 '
@@ -355,15 +355,15 @@ Private Declare PtrSafe Function daveForce200 Lib "libnodave.dll" (ByVal dc As L
 ' Initialize a multivariable read request.
 ' The parameter PDU must have been obtained from daveNew PDU:
 '
-Private Declare PtrSafe Sub davePrepareReadRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal pdu As Long)
+Private Declare PtrSafe Sub davePrepareReadRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal Pdu As Long)
 '
 ' Add a new variable to a prepared request:
 '
-Private Declare PtrSafe Sub daveAddVarToReadRequest Lib "libnodave.dll" (ByVal pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long)
+Private Declare PtrSafe Sub daveAddVarToReadRequest Lib "libnodave.dll" (ByVal Pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long)
 '
 ' Executes the entire request:
 '
-Private Declare PtrSafe Function daveExecReadRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal pdu As Long, ByVal rs As Long) As Long
+Private Declare PtrSafe Function daveExecReadRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal Pdu As Long, ByVal rs As Long) As Long
 '
 ' Use the n-th result. This lets the functions daveGet<data type> work on that part of the
 ' internal buffer that contains the n-th result:
@@ -378,24 +378,24 @@ Private Declare PtrSafe Sub daveFreeResults Lib "libnodave.dll" (ByVal rs As Lon
 ' Adds a new bit variable to a prepared request. As with daveReadBits, numBytes must be one for
 ' all tested PLCs.
 '
-Private Declare PtrSafe Sub daveAddBitVarToReadRequest Lib "libnodave.dll" (ByVal pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long)
+Private Declare PtrSafe Sub daveAddBitVarToReadRequest Lib "libnodave.dll" (ByVal Pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long)
 '
 ' Initialize a multivariable write request.
 ' The parameter PDU must have been obtained from daveNew PDU:
 '
-Private Declare PtrSafe Sub davePrepareWriteRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal pdu As Long)
+Private Declare PtrSafe Sub davePrepareWriteRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal Pdu As Long)
 '
 ' Add a new variable to a prepared write request:
 '
-Private Declare PtrSafe Sub daveAddVarToWriteRequest Lib "libnodave.dll" (ByVal pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long, ByRef buffer As Byte)
+Private Declare PtrSafe Sub daveAddVarToWriteRequest Lib "libnodave.dll" (ByVal Pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long, ByRef buffer As Byte)
 '
 ' Add a new bit variable to a prepared write request:
 '
-Private Declare PtrSafe Sub daveAddBitVarToWriteRequest Lib "libnodave.dll" (ByVal pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long, ByRef buffer As Byte)
+Private Declare PtrSafe Sub daveAddBitVarToWriteRequest Lib "libnodave.dll" (ByVal Pdu As Long, ByVal area As Long, ByVal areaNumber As Long, ByVal start As Long, ByVal numBytes As Long, ByRef buffer As Byte)
 '
 ' Execute the entire write request:
 '
-Private Declare PtrSafe Function daveExecWriteRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal pdu As Long, ByVal rs As Long) As Long
+Private Declare PtrSafe Function daveExecWriteRequest Lib "libnodave.dll" (ByVal dc As Long, ByVal Pdu As Long, ByVal rs As Long) As Long
 '
 ' Initialize an MPI Adapter or NetLink Ethernet MPI gateway.
 ' While some protocols do not need this, I recommend to allways use it. It will do nothing if
@@ -926,4 +926,368 @@ Sub WriteFromPLC()
         MsgBox "No route PLC, check connection and settings"
     End If
         Call cleanUp(ph, di, dc)
+End Sub
+
+'--------------------------------Structur declaration--------------------------------------
+'Struct to save entries in MultiReads
+Type DataStruct
+    area As Long        'dave constant dedicated to area
+    areaNumber As Long  'DBx=x ,other=0
+    addrOffset As String
+    addrBit As String
+    bits As Integer
+    pduNum As Integer    'in which pdu is located answer for this data
+End Type
+
+
+Type RequestStruct
+    area As Long        'dave constant dedicated to area
+    areaNumber As Long  'DBx=x ,other=0
+    start As Long       'byte offset
+    numBytes As Long    'amount of bytes
+End Type
+
+'Struct to save parameters for subsequent PDU requests
+Type PduStruct
+    request(20) As RequestStruct
+End Type
+
+
+
+'Dense variables to read data in as small amount of PDU as possible
+Sub MultiReads()
+    Dim ph As Long, di As Long, dc As Long, iRow As Integer, dbnum As String
+    Dim TagType_array() As String, TagName As String, TagAdress As String, TagCompare As String
+    'Dim buffer As Byte, buffer1 As Byte, buffer2 As Byte, buffer3 As Byte
+    'Dim bfbyte As Byte, bitStat As Integer, bitPos As Byte
+    'Dim areaNum As Long
+    'areaNum = 0 'variable for real i/o
+    
+    
+    Dim Data(2000) As DataStruct                                                               'pointers for data (maximal 2000 entries)
+    Dim Pdu(100) As PduStruct                                                                  'pointers for pdu requests
+    Dim pduNum As Long, reqNum As Long                                                         'counters for subsequent PDU command and request in PDU
+    
+    
+    dataPointer = 0                                                                            'data pointer for DataStruct
+    pduNum = 0
+    reqNum = 0
+    iRow = 3
+    
+    
+    res = Initialize(ph, di, dc)
+    
+'--------------------------------Assign data to pointers in request--------------------------------------
+    Do Until IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3))
+       TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value, ".")    'read entry
+       
+                                                                                                'variables to handle
+                                                                                                '1bit I0.0, Q0.0, M0.0, DB0.DBX0.0
+                                                                                                '1byte IB1, QB1, MB1, DB1.DBB1
+                                                                                                '2bytes IW2 , QW2, MW2, DB1.DBW2
+                                                                                                '4bytes ID4, QD4, MD4, DB4.DBD4(dword/real)
+       
+'--------------------------------Decode Input data--------------------------------------
+       If InStr(TagType_array(0), "I") > 0 Then
+
+'--------------------------------Decode Input bit--------------------------------------
+          If UBound(TagType_array) > 0 Then                                                      'bit recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "I", "")                    'extract byte offset
+            Data(dataPointer).addrBit = TagType_array(1)                                         'extract bit offset
+            Data(dataPointer).bits = 1                                                           'assign amount of bytes
+            Data(dataPointer).area = daveInputs                                                  'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                      
+'--------------------------------Check if you can fill byte by next bits-----------------------
+            For t_i = Data(dataPointer).addrBit To 7
+            
+                
+                
+                If IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3)) Then           'check if next cell is empty
+                   Exit For
+                Else
+                   TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3).value, ".")
+                End If
+                    
+                If InStr(TagType_array(0), "I") > 0 _
+                And Replace(TagType_array(0), "I", "") = Data(dataPointer).addrOffset _
+                And UBound(TagType_array) > 0 Then                                               'check if next cell is Input bit in the same byte
+                
+                   iRow = iRow + 1                                                               'next entry
+                   dataPointer = dataPointer + 1
+                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet >2000"
+                      Call cleanUp(ph, di, dc)
+                      Exit Sub
+                   End If
+                   
+                   Data(dataPointer).addrOffset = Replace(TagType_array(0), "I", "")                    'extract byte offset
+                   Data(dataPointer).addrBit = TagType_array(1)                                         'extract bit offset
+                   Data(dataPointer).bits = 1                                                           'assign amount of bytes
+                   Data(dataPointer).area = daveInputs                                                  'dave constant dedicated to area
+                   Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+                   Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                Else
+                   Exit For
+                End If
+                t_i = Data(dataPointer).addrBit                                                  'update next input bit
+            Next
+                                                
+'--------------------------------Decode Input word--------------------------------------
+          ElseIf InStr(TagType_array(0), "IW") > 0 Then                                          'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "IW", "")                   'extract byte offset
+            Data(dataPointer).bits = 8                                                          'assign amount of bytes
+            Data(dataPointer).area = daveInputs                                                  'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+            
+'--------------------------------Decode Input dword--------------------------------------
+          ElseIf InStr(TagType_array(0), "ID") > 0 Then                                          'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "ID", "")                   'extract byte offset
+            Data(dataPointer).bits = 32                                                          'assign amount of bytes
+            Data(dataPointer).area = daveInputs                                                  'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+          End If
+          
+'--------------------------------Decode Output data--------------------------------------
+       ElseIf InStr(TagType_array(0), "Q") > 0 Then
+       
+'--------------------------------Decode Output bit--------------------------------------
+          If UBound(TagType_array) > 0 Then                                                      'bit recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "Q", "")                    'extract byte offset
+            Data(dataPointer).addrBit = TagType_array(1)                                         'extract bit offset
+            Data(dataPointer).bits = 1                                                           'assign amount of bytes
+            Data(dataPointer).area = daveOutputs                                                 'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                      
+'--------------------------------Check if you can fill byte by next bits-----------------------
+            For t_i = Data(dataPointer).addrBit To 7
+            
+                
+                
+                If IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3)) Then           'check if next cell is empty
+                   Exit For
+                Else
+                   TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3).value, ".")
+                End If
+                    
+                If InStr(TagType_array(0), "Q") > 0 _
+                And Replace(TagType_array(0), "Q", "") = Data(dataPointer).addrOffset _
+                And UBound(TagType_array) > 0 Then                                               'check if next cell is Output bit in the same byte
+
+                   iRow = iRow + 1                                                               'next entry
+                   dataPointer = dataPointer + 1
+                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet >2000"
+                      Call cleanUp(ph, di, dc)
+                      Exit Sub
+                   End If
+                   
+                   Data(dataPointer).addrOffset = Replace(TagType_array(0), "Q", "")                    'extract byte offset
+                   Data(dataPointer).addrBit = TagType_array(1)                                         'extract bit offset
+                   Data(dataPointer).bits = 1                                                           'assign amount of bytes
+                   Data(dataPointer).area = daveOutputs                                                 'dave constant dedicated to area
+                   Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+                   Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                Else
+                   Exit For
+                End If
+                t_i = Data(dataPointer).addrBit                                                  'update next input bit
+            Next
+                                                
+'--------------------------------Decode Output word--------------------------------------
+          ElseIf InStr(TagType_array(0), "QW") > 0 Then                                          'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "QW", "")                   'extract byte offset
+            Data(dataPointer).bits = 8                                                          'assign amount of bytes
+            Data(dataPointer).area = daveOutputs                                                  'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+            
+'--------------------------------Decode Output dword--------------------------------------
+          ElseIf InStr(TagType_array(0), "QD") > 0 Then                                          'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "QD", "")                   'extract byte offset
+            Data(dataPointer).bits = 32                                                          'assign amount of bytes
+            Data(dataPointer).area = daveOutputs                                                  'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+          End If
+'--------------------------------Decode Marker data--------------------------------------
+       ElseIf InStr(TagType_array(0), "M") > 0 Then
+       
+'--------------------------------Decode Marker bit--------------------------------------
+          If UBound(TagType_array) > 0 Then                                                      'bit recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "M", "")                    'extract byte offset
+            Data(dataPointer).addrBit = TagType_array(1)                                         'extract bit offset
+            Data(dataPointer).bits = 1                                                           'assign amount of bytes
+            Data(dataPointer).area = daveFlags                                                   'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                      
+'--------------------------------Check if you can fill byte by next bits-----------------------
+            For t_i = Data(dataPointer).addrBit To 7
+            
+                
+                
+                If IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3)) Then           'check if next cell is empty
+                   Exit For
+                Else
+                   TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3).value, ".")
+                End If
+                    
+                If InStr(TagType_array(0), "M") > 0 _
+                And Replace(TagType_array(0), "M", "") = Data(dataPointer).addrOffset _
+                And UBound(TagType_array) > 0 Then                                               'check if next cell is Marker bit in the same byte
+
+                   iRow = iRow + 1                                                               'next entry
+                   dataPointer = dataPointer + 1
+                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet >2000"
+                      Call cleanUp(ph, di, dc)
+                      Exit Sub
+                   End If
+                   
+                   Data(dataPointer).addrOffset = Replace(TagType_array(0), "M", "")                    'extract byte offset
+                   Data(dataPointer).addrBit = TagType_array(1)                                         'extract bit offset
+                   Data(dataPointer).bits = 1                                                           'assign amount of bytes
+                   Data(dataPointer).area = daveFlags                                                   'dave constant dedicated to area
+                   Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+                   Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                Else
+                   Exit For
+                End If
+                
+                t_i = Data(dataPointer).addrBit                                                  'update next input bit
+            Next
+                                                
+'--------------------------------Decode Marker word--------------------------------------
+          ElseIf InStr(TagType_array(0), "MW") > 0 Then                                          'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "MW", "")                   'extract byte offset
+            Data(dataPointer).bits = 8                                                           'assign amount of bytes
+            Data(dataPointer).area = daveFlags                                                   'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+            
+'--------------------------------Decode Marker dword--------------------------------------
+          ElseIf InStr(TagType_array(0), "MD") > 0 Then                                          'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(0), "MD", "")                   'extract byte offset
+            Data(dataPointer).bits = 32                                                          'assign amount of bytes
+            Data(dataPointer).area = daveFlags                                                   'dave constant dedicated to area
+            Data(dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+          End If
+       
+'--------------------------------Decode DB data--------------------------------------
+       ElseIf InStr(TagType_array(0), "DB") > 0 Then
+          Data(dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                     'DBx=x ,other=0
+          
+ '--------------------------------Decode DB bit--------------------------------------
+          If UBound(TagType_array) > 1 Then                                                      'bit recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(1), "DBX", "")                   'extract byte offset
+            Data(dataPointer).addrBit = TagType_array(2)                                         'extract bit offset
+            Data(dataPointer).bits = 1                                                           'assign amount of bytes
+            Data(dataPointer).area = daveDB                                                      'dave constant dedicated to area
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                      
+'--------------------------------Check if you can fill byte by next bits-----------------------
+            For t_i = Data(dataPointer).addrBit To 7
+            
+                
+                
+                If IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3)) Then           'check if next cell is empty
+                   Exit For
+                Else
+                   TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3).value, ".")
+                End If
+                    
+                If InStr(TagType_array(0), "DB") > 0 _
+                And InStr(TagType_array(1), "DBX") > 0 _
+                And Replace(TagType_array(1), "DBX", "") = Data(dataPointer).addrOffset _
+                And UBound(TagType_array) > 1 Then                                               'check if next cell is DB bit in the same byte
+                                  
+                   iRow = iRow + 1                                                               'next entry
+                   dataPointer = dataPointer + 1
+                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet >2000"
+                      Call cleanUp(ph, di, dc)
+                      Exit Sub
+                   End If
+                   
+                   Data(dataPointer).addrOffset = Replace(TagType_array(1), "DBX", "")                  'extract byte offset
+                   Data(dataPointer).addrBit = TagType_array(2)                                         'extract bit offset
+                   Data(dataPointer).bits = 1                                                           'assign amount of bytes
+                   Data(dataPointer).area = daveDB                                                      'dave constant dedicated to area
+                   Data(dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                   'DBx=x ,other=0
+                   Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+                Else
+                   Exit For
+                End If
+                
+                t_i = Data(dataPointer).addrBit                                                  'update next input bit
+            Next
+                                                
+'--------------------------------Decode DB word--------------------------------------
+          ElseIf InStr(TagType_array(1), "DBW") > 0 Then                                         'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(1), "DBW", "")                  'extract byte offset
+            Data(dataPointer).bits = 8                                                           'assign amount of bytes
+            Data(dataPointer).area = daveDB                                                      'dave constant dedicated to area
+            Data(dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                   'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+            
+'--------------------------------Decode DB dword--------------------------------------
+          ElseIf InStr(TagType_array(1), "DBDW") > 0 Then                                        'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(1), "DBDW", "")                 'extract byte offset
+            Data(dataPointer).bits = 32                                                          'assign amount of bytes
+            Data(dataPointer).area = daveDB                                                      'dave constant dedicated to area
+            Data(dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                   'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+            
+'--------------------------------Decode DB real--------------------------------------
+          ElseIf InStr(TagType_array(1), "DBDW") > 0 Then                                        'word recognize
+            Data(dataPointer).addrOffset = Replace(TagType_array(1), "DBDW", "")                 'extract byte offset
+            Data(dataPointer).bits = 33                                                          'put there 33 to distinguish to dword
+            Data(dataPointer).area = daveDB                                                      'dave constant dedicated to area
+            Data(dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                   'DBx=x ,other=0
+            Data(dataPointer).pduNum = pduNum                                                    'determine in which pdu is located answer for this data
+          End If
+            
+          End If
+
+'-----------------------Assign parameters for request--------------------------------------
+            Pdu(pduNum).request(reqNum).area = Data(dataPointer).area
+            Pdu(pduNum).request(reqNum).areaNumber = Data(dataPointer).areaNumber
+            Pdu(pduNum).request(reqNum).start = Data(dataPointer).addrOffset                     'get offset byte from last bit
+            If Data(dataPointer).bits = 1 Then
+                Pdu(pduNum).request(reqNum).numBytes = Data(dataPointer).bits                    'convert bits to bytes
+            ElseIf Data(dataPointer).bits = 33 Then
+                Pdu(pduNum).request(reqNum).numBytes = (Data(dataPointer).bits - 1) / 8          'distinguish real <> dw
+            Else
+                Pdu(pduNum).request(reqNum).numBytes = Data(dataPointer).bits / 8
+            End If
+       
+'---------------------Move pointer to next request--------------------------------------
+             reqNum = reqNum + 1
+             If reqNumm > 19 Then
+                reqNumm = 0
+                pduNum = pduNum + 1
+                If pduNum > 99 Then                                                              'catch error if to many PDU
+                    MsgBox "Too many PDU request >100"
+                    Call cleanUp(ph, di, dc)
+                    Exit Sub
+                End If
+             End If
+       
+'--------------------------------Next entry------------------------------------------------------
+             iRow = iRow + 1
+             dataPointer = dataPointer + 1
+             If dataPointer > 1999 Then                                                       'catch error if to many variables in sheet
+                MsgBox "Too many entries in sheet >2000"
+                Call cleanUp(ph, di, dc)
+                Exit Sub
+             End If
+                                                                                                                   
+    Loop
+    
 End Sub
