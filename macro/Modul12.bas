@@ -1,4 +1,35 @@
 Attribute VB_Name = "Modul12"
+'--------------------------------Structur declaration--------------------------------------
+'Struct to save entries in ExamineData
+Public Type DataStruct
+
+    area As Long        'dave constant dedicated to area
+    areaNumber As Long  'DBx=x ,other=0
+    addrOffset As String
+    addrBit As String
+    bits As Integer
+    pduNum As Integer    'in which pdu unit is located answer for this data
+    reqNum As Integer    'in which request is located answer for this data
+    
+End Type
+
+
+Public Type RequestStruct
+
+    area As Long        'dave constant dedicated to area
+    areaNumber As Long  'DBx=x ,other=0
+    start As Long       'byte offset
+    numBytes As Long    'amount of bytes
+    
+End Type
+
+'Struct to save parameters for subsequent PDU requests
+Public Type PduStruct
+
+    request(19) As RequestStruct   'each pdu can has max 20 entries
+    
+End Type
+'---------------------------------------------------------------------------------
 '
 ' Part of Libnodave, a free communication libray for Siemens S7 200/300/400 via
 ' the MPI adapter 6ES7 972-0CA22-0XAC
@@ -928,61 +959,48 @@ Sub WriteFromPLC()
         Call cleanUp(ph, di, dc)
 End Sub
 
-'--------------------------------Structur declaration--------------------------------------
-'Struct to save entries in ExamineData
-Type DataStruct
-    area As Long        'dave constant dedicated to area
-    areaNumber As Long  'DBx=x ,other=0
-    addrOffset As String
-    addrBit As String
-    bits As Integer
-    pduNum As Integer    'in which pdu unit is located answer for this data
-    reqNum As Integer    'in which request is located answer for this data
-End Type
 
 
-Type RequestStruct
-    area As Long        'dave constant dedicated to area
-    areaNumber As Long  'DBx=x ,other=0
-    start As Long       'byte offset
-    numBytes As Long    'amount of bytes
-End Type
 
-'Struct to save parameters for subsequent PDU requests
-Type PduStruct
-    request(20) As RequestStruct
-End Type
 
 
 'Dense variables to read data in as small amount of PDU as possible
 Sub ExamineData()
     Dim ph As Long, di As Long, dc As Long, iRow As Integer
     Dim TagType_array() As String
-    
-    'Late binding object
-    Dim Data(2000) As Object                                                               'pointers for data (maximal 2000 entries)
-    'For t_i = 0 To 1999
-        Set Data(t_i) = CreateObject("DataStruct")
-    'Next
-        
-    'Late binding object
-    Dim Pdu(100) As Object                                                                  'pointers for pdu requests
-    For t_i = 0 To 99
-        Set Pdu(t_i) = CreateObject("PduStruct")
-    Next
-    
+    Dim t_i As Integer, t_j As Integer, t_k As Integer 'iterators
+    'vb create 3 entries even i put array(2) :) so i substract 1 (2 is because of position first entry in sheet)
+    LastCell = Cells(Rows.Count, "C").End(xlUp).Row - 2 - 1                                 'get last non-empty cell
+
+    'reserve memory for variable parameters
+    Dim Data() As DataStruct                                                             'pointers for data (maximal 2000 entries)
+    ReDim Data(LastCell)
+
+
+    pduRequests = (LastCell + 1) / 20                                                          'check how many request we need according amount of data
+    remain = (LastCell + 1) Mod 20
+    If remain > 0 Then
+        pduRequests = pduRequests - (remain / 20)
+    Else
+        pduRequests = pduRequests - (remain / 20) - 1
+    End If
+
+    'reserve memory for pdu request parameters
+    Dim Pdu() As PduStruct                                                                      'pointers for pdu requests
+    ReDim Pdu(pduRequests)
+
+
     Dim pduNum As Long, reqNum As Long                                                         'counters for subsequent PDU command and request in PDU
     
-    
     dataPointer = -1                                                                            'data pointer for DataStruct
-    pduNum = -1                                                                                'start pointer before array
+    pduNum = 0                                                                                'start pointer before array
     reqNum = -1
     iRow = 3 - 1
     
 
     res = Initialize(ph, di, dc)
     If res <> 0 Then
-        MsgBox "Error " + res + "occured"
+        MsgBox "Error: " & res & " occured" & vbNewLine & "No route PLC, check connection and settings"
         Call cleanUp(ph, di, dc)
         Exit Sub
     End If
@@ -994,8 +1012,8 @@ Sub ExamineData()
         If reqNum > 19 Then
             reqNum = 0
             pduNum = pduNum + 1
-            If pduNum > 99 Then                                                              'catch error if to many PDU
-                MsgBox "Too many PDU request >100"
+            If pduNum > pduRequests Then                                                              'catch error if to many PDU
+                MsgBox "Too many PDU request > " & pduRequests
                 Call cleanUp(ph, di, dc)
                 Exit Sub
              End If
@@ -1004,8 +1022,8 @@ Sub ExamineData()
 '--------------------------------Next entry------------------------------------------------------
          iRow = iRow + 1
          dataPointer = dataPointer + 1
-         If dataPointer > 1999 Then                                                       'catch error if to many variables in sheet
-            MsgBox "Too many entries in sheet >2000"
+         If dataPointer > LastCell Then                                                       'catch error if to many variables in sheet
+            MsgBox "Too many entries in sheet > " & LastCell
             Call cleanUp(ph, di, dc)
             Exit Sub
          End If
@@ -1048,8 +1066,8 @@ Sub ExamineData()
                 
                    iRow = iRow + 1                                                               'next entry
                    dataPointer = dataPointer + 1
-                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet >2000"
+                   If dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & LastCell
                       Call cleanUp(ph, di, dc)
                       Exit Sub
                    End If
@@ -1123,8 +1141,8 @@ Sub ExamineData()
 
                    iRow = iRow + 1                                                               'next entry
                    dataPointer = dataPointer + 1
-                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet >2000"
+                   If dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & LastCell
                       Call cleanUp(ph, di, dc)
                       Exit Sub
                    End If
@@ -1198,8 +1216,8 @@ Sub ExamineData()
 
                    iRow = iRow + 1                                                               'next entry
                    dataPointer = dataPointer + 1
-                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet >2000"
+                   If dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & LastCell
                       Call cleanUp(ph, di, dc)
                       Exit Sub
                    End If
@@ -1277,8 +1295,8 @@ Sub ExamineData()
                                   
                    iRow = iRow + 1                                                               'next entry
                    dataPointer = dataPointer + 1
-                   If dataPointer > 1999 Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet >2000"
+                   If dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & LastCell
                       Call cleanUp(ph, di, dc)
                       Exit Sub
                    End If
@@ -1336,7 +1354,7 @@ Sub ExamineData()
           
 '----------------------------------Unknown variable--------------------------------------
        Else
-          MsgBox "Unknown variable on: " + iRow + " row"
+          MsgBox "Unknown variable on: " & iRow & " " & " row"
           Call cleanUp(ph, di, dc)
           Exit Sub
        End If
@@ -1353,37 +1371,45 @@ Sub ExamineData()
                 Pdu(pduNum).request(reqNum).numBytes = Data(dataPointer).bits / 8
             End If
        
+
     Loop
 '-----------------------------------------------------------------------------------------------
-
+        '  MsgBox "Breakpoint: "
 
 '--------------------------------Read Data------------------------------------------------------
     Dim resultSet As Long
     Dim PduRequest As Long
     Dim readDataPointer As Long
-    readDataPointer = -1
+
     Dim cellPointer As Long
-    cellPointer = 3 - 1
+    
+    t_i = 0
+    t_j = 0
+    t_k = 0
+    
     
     Dim bfbyte As Byte
     Dim bitStat As Integer
     Dim bitPos As Byte
 
-    MsgBox "PDU units: " + pduElem + ", Requests: " + reqElem
+
         
-    PduRequest = daveNewPDU                                                                    'prepare request interface
-    Call davePrepareReadRequest(dc, PduRequest)
-    
+    PduRequest = daveNewPDU                                                             'new request object
+
+    'restart here
+    cellPointer = 3 - 1
+    readDataPointer = -1
   
     If dataPointer <> -1 Then                                                        'check if we have some data in sheet
         
-        For t_i = 0 To pduElem                                                       'pdu loop
-            If t_i = pduElem Then                                                    'last pdu won't have full 20 requests
+        For t_i = 0 To pduNum                                                       'pdu loop
+            If t_i = pduNum Then                                                    'last pdu won't have full 20 requests
                 reqElem = reqNum
             Else
                 reqElem = 19
             End If
             
+            Call davePrepareReadRequest(dc, PduRequest)                              'prepare request interface
             For t_j = 0 To reqElem                                                   'request loop
 '-----------------------------add variable to request--------------------------------------------
                 Call daveAddVarToReadRequest(PduRequest, Pdu(t_i).request(t_j).area, Pdu(t_i).request(t_j).areaNumber, Pdu(t_i).request(t_j).start, Pdu(t_i).request(t_j).numBytes)
@@ -1391,18 +1417,19 @@ Sub ExamineData()
             resultSet = daveNewResultSet
             
 '-----------------------------Send request with filled PDU-------------------------------------
-            res2 = res2 = daveExecReadRequest(dc, PduRequest, resultSet)
+            res2 = daveExecReadRequest(dc, PduRequest, resultSet)
+
             If res2 = 0 Then
-                cellPointer = cellPointer + 1                                       'increment pointers
-                readDataPointer = readDataPointer + 1
-                
 '-----------------------------Read each request-------------------------------------
-                For t_k = 0 To reqElm
+                For t_k = 0 To reqElem
                     res3 = daveUseResult(dc, resultSet, t_k)
-                    
+                    cellPointer = cellPointer + 1                                       'increment pointers
+                    readDataPointer = readDataPointer + 1
+                    'MsgBox "PDU units: " & t_i & ", Requests: " & t_k & " daveuseresult: " & res3 & vbNewLine & " datapointer " & readDataPointer
 '-----------------------------Decode bits-------------------------------------
                     If Pdu(t_i).request(t_k).numBytes = 1 _
                     And Data(readDataPointer).reqNum = t_k _
+                    And Data(readDataPointer).pduNum = t_i _
                     And Data(readDataPointer).bits = 1 Then                             'check how many bytes has this request
                         bfbyte = daveGetU8(dc)                                          'get byte from buffor
                         bitPos = CByte(Data(readDataPointer).addrBit)                   'get bit from saved parameter
@@ -1415,61 +1442,71 @@ Sub ExamineData()
                             ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = False
                             ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4).Interior.Color = RGB(255, 0, 0)
                         End If
+                            
+                        If readDataPointer < dataPointer Then
                         
-                        Do Until Data(readDataPointer).addrOffset = Data(readDataPointer + 1).addrOffset _
-                        And readDataPointer < dataPointer
-                            cellPointer = cellPointer + 1                                       'increment pointers
-                            readDataPointer = readDataPointer + 1
+                            Do While Data(readDataPointer).addrOffset = Data(readDataPointer + 1).addrOffset _
+                            And Data(readDataPointer).area = Data(readDataPointer + 1).area _
+                            And Data(readDataPointer + 1).bits = 1 _
+                            And Data(readDataPointer + 1).reqNum = t_k _
+                            And Data(readDataPointer + 1).pduNum = t_i
                             
-                            bitPos = CByte(Data(readDataPointer).addrBit)                   'get bit from saved parameter
-                            bitStat = bfbyte And 2 ^ bitPos
-                            
-                        If bitStat > 0 Then
-                            ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = True
-                            ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4).Interior.Color = RGB(0, 255, 0)
-                        ElseIf bitStat = 0 Then
-                            ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = False
-                            ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4).Interior.Color = RGB(255, 0, 0)
+                                cellPointer = cellPointer + 1                                       'increment pointers
+                                readDataPointer = readDataPointer + 1
+                                bitPos = CByte(Data(readDataPointer).addrBit)                   'get bit from saved parameter
+                                bitStat = bfbyte And 2 ^ bitPos
+                                
+                                If bitStat > 0 Then
+                                    ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = True
+                                    ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4).Interior.Color = RGB(0, 255, 0)
+                                ElseIf bitStat = 0 Then
+                                    ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = False
+                                    ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4).Interior.Color = RGB(255, 0, 0)
+                                End If
+                            Loop
+                        Else
+                            'MsgBox "Data pointer outside range: " & readDataPointer & vbNewLine & "PDU units: " & t_i & ", Requests: " & t_k
                         End If
-                        Loop
-                        
 '-----------------------------Decode byte-------------------------------------
                     ElseIf Pdu(t_i).request(t_k).numBytes = 1 _
                     And Data(dataPointer).bits = 8 _
-                    And Data(readDataPointer).reqNum = t_k Then
+                    And Data(readDataPointer).reqNum = t_k _
+                    And Data(readDataPointer).pduNum = t_i Then
                         ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = daveGetS8(dc)
 '-----------------------------Decode word,int-------------------------------------
                     ElseIf Pdu(t_i).request(t_k).numBytes = 2 _
-                    And Data(readDataPointer).reqNum = t_k Then
+                    And Data(readDataPointer).reqNum = t_k _
+                    And Data(readDataPointer).pduNum = t_i Then
                         ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = daveGetU16(dc)
                     
 '-----------------------------Decode dword-------------------------------------
                     ElseIf Pdu(t_i).request(t_k).numBytes = 4 _
                     And Data(readDataPointer).reqNum = t_k _
+                    And Data(readDataPointer).pduNum = t_i _
                     And Data(readDataPointer).bits = 32 Then
                         ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = daveGetS32(dc)
                         
 '-----------------------------Decode real-------------------------------------
                     ElseIf Pdu(t_i).request(t_k).numBytes = 4 _
                     And Data(readDataPointer).reqNum = t_k _
+                    And Data(readDataPointer).pduNum = t_i _
                     And Data(readDataPointer).bits = 33 Then
                         ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = daveGetFloat(dc)
                         
                     Else
-                        MsgBox "PDU units: " + t_i + ", Requests: " + t_k + " not found. " + "Cell: " + cellPointer + ", Data: " + readDataPointer
+                        MsgBox "PDU units: " & t_i & ", Requests: " & t_k & " not found. " & vbNewLine & "Cell: " & cellPointer & ", Data: " & readDataPointer
                         Call cleanUp(ph, di, dc)
                         Exit Sub
                     End If
-                    
-                    daveFree (resultSet)                                    'free memory for next entry
-                    daveFree (PduRequest)
-                    
+                     
                 Next
             Else
-                MsgBox "Send request error: " + res2
+                MsgBox "Send request error: " & res2
                 Call cleanUp(ph, di, dc)
                 Exit Sub
             End If
+            daveFreeResults (resultSet)                                    'free memory for next entry
+            'daveFreeResults (PduRequest)
         Next
     Else
         MsgBox "Empty sheet"
@@ -1522,4 +1559,11 @@ Sub importTags()
     End If
     
     Application.ScreenUpdating = True 'turn on back flickering screen
+End Sub
+
+
+Sub timer()
+
+
+End Sub
 End Sub
