@@ -663,8 +663,19 @@ End Sub
 
 
 'Dense variables to read data in as small amount of PDU as possible
-Private Function ExamineData() 'As Interface
+Private Sub ExamineData() 'As Interface
  'todo: if some unknown address exist in sheet try to pop up some input for user to change this variable or remove
+    
+'-----------------------Buttons preparation------------------------------------
+    'turn off refreshing screen to speed up code
+    Application.ScreenUpdating = False
+    'delete all set/reset/write buttons before start create new
+    Call DeleteBtn
+    Dim btn As Button   'create button object
+    Dim t As Range      'object to determine shape of button
+    
+    
+    
     
     Dim iRow As Integer
     Dim TagType_array() As String
@@ -672,15 +683,23 @@ Private Function ExamineData() 'As Interface
     'Dim Verbindung As Interface
 '---------------------Data parameters--------------------------------------
     'vb create 3 entries even i put array(2) :) so i substract 1 (2 is because of position first entry in sheet)
-    LastCell = Cells(Rows.Count, "C").End(xlUp).Row - 2 - 1                                 'get last non-empty cell
-
+    lastCell = Cells(Rows.Count, "C").End(xlUp).row - 2 - 1                                 'get last non-empty cell
+    
+    'sheet is empty
+    If lastCell < 0 Then
+        MsgBox "Sheet is empty"
+        Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
+        Exit Sub
+    End If
+    
+    
     'reserve memory for variable parameters
-    ReDim Verbindung.Data(LastCell)
+    ReDim Verbindung.Data(lastCell)
 
 
 '---------------------PDU parameters--------------------------------------
-    pduRequests = (LastCell + 1) / 20                                                          'check how many request we need according amount of data
-    remain = (LastCell + 1) Mod 20
+    pduRequests = (lastCell + 1) / 20                                                          'check how many request we need according amount of data
+    remain = (lastCell + 1) Mod 20
     If remain > 0 Then
         pduRequests = pduRequests - (remain / 20)
     Else
@@ -700,7 +719,7 @@ Private Function ExamineData() 'As Interface
     If res <> 0 Then
         MsgBox "Error: " & res & " occured" & vbNewLine & "No route PLC, check connection and settings"
         Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-        Exit Function
+        Exit Sub
     End If
 '--------------------------------Search for entries--------------------------------------
     Do Until IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3))
@@ -713,17 +732,17 @@ Private Function ExamineData() 'As Interface
             If Verbindung.pduNum > pduRequests Then                                                              'catch error if to many PDU
                 MsgBox "Too many PDU request > " & pduRequests
                 Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-                Exit Function
+                Exit Sub
              End If
          End If
        
 '--------------------------------Next entry------------------------------------------------------
          iRow = iRow + 1
          Verbindung.dataPointer = Verbindung.dataPointer + 1
-         If Verbindung.dataPointer > LastCell Then                                                       'catch error if to many variables in sheet
-            MsgBox "Too many entries in sheet > " & LastCell
+         If Verbindung.dataPointer > lastCell Then                                                       'catch error if to many variables in sheet
+            MsgBox "Too many entries in sheet > " & lastCell
             Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-            Exit Function
+            Exit Sub
          End If
     
        TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value, ".")    'read entry
@@ -746,7 +765,16 @@ Private Function ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
-                      
+            
+'--------------------------------Create ToogleBit button------------------------------------------
+            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+            With btn
+                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                .name = "Btn" & iRow
+            End With
+                                  
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(Verbindung.dataPointer).addrBit To 7
             
@@ -764,10 +792,10 @@ Private Function ExamineData() 'As Interface
                 
                    iRow = iRow + 1                                                               'next entry
                    Verbindung.dataPointer = Verbindung.dataPointer + 1
-                   If Verbindung.dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet > " & LastCell
+                   If Verbindung.dataPointer > lastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & lastCell
                       Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-                      Exit Function
+                      Exit Sub
                    End If
                    
                    Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(0), "I", "")                    'extract byte offset
@@ -777,6 +805,17 @@ Private Function ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+                   
+'--------------------------------Create ToogleBit button------------------------------------------
+                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+                    With btn
+                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                        .name = "Btn" & iRow
+                        
+                    End With
+                   
                 Else
                    Exit For
                 End If
@@ -822,6 +861,16 @@ Private Function ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create ToogleBit button------------------------------------------
+            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+            With btn
+                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                .name = "Btn" & iRow
+            End With
+            
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(dataPointer).addrBit To 7
             
@@ -839,10 +888,10 @@ Private Function ExamineData() 'As Interface
 
                    iRow = iRow + 1                                                               'next entry
                    Verbindung.dataPointer = Verbindung.dataPointer + 1
-                   If Verbindung.dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet > " & LastCell
+                   If Verbindung.dataPointer > lastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & lastCell
                       Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-                      Exit Function
+                      Exit Sub
                    End If
                    
                    Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(0), "Q", "")                    'extract byte offset
@@ -852,6 +901,16 @@ Private Function ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+                   
+'--------------------------------Create ToogleBit button------------------------------------------
+                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+                    With btn
+                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                        .name = "Btn" & iRow
+                    End With
+                   
                 Else
                    Exit For
                 End If
@@ -898,6 +957,15 @@ Private Function ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
+'--------------------------------Create ToogleBit button------------------------------------------
+            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+            With btn
+                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                .name = "Btn" & iRow
+            End With
+            
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(Verbindung.dataPointer).addrBit To 7
             
@@ -915,10 +983,10 @@ Private Function ExamineData() 'As Interface
 
                    iRow = iRow + 1                                                               'next entry
                    Verbindung.dataPointer = Verbindung.dataPointer + 1
-                   If Verbindung.dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet > " & LastCell
+                   If Verbindung.dataPointer > lastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & lastCell
                       Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-                      Exit Function
+                      Exit Sub
                    End If
                    
                    Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(0), "M", "")                    'extract byte offset
@@ -928,6 +996,16 @@ Private Function ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+                   
+'--------------------------------Create ToogleBit button------------------------------------------
+                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+                    With btn
+                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                        .name = "Btn" & iRow
+                    End With
+                   
                 Else
                    Exit For
                 End If
@@ -975,6 +1053,15 @@ Private Function ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).area = daveDB                                                      'dave constant dedicated to area
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create ToogleBit button------------------------------------------
+            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+            With btn
+                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                .name = "Btn" & iRow
+            End With
                       
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(Verbindung.dataPointer).addrBit To 7
@@ -994,10 +1081,10 @@ Private Function ExamineData() 'As Interface
                                   
                    iRow = iRow + 1                                                               'next entry
                    Verbindung.dataPointer = Verbindung.dataPointer + 1
-                   If Verbindung.dataPointer > LastCell Then                                                    'catch error if to many variables in sheet
-                      MsgBox "Too many entries in sheet > " & LastCell
+                   If Verbindung.dataPointer > lastCell Then                                                    'catch error if to many variables in sheet
+                      MsgBox "Too many entries in sheet > " & lastCell
                       Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-                      Exit Function
+                      Exit Sub
                    End If
                    
                    Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(1), "DBX", "")                  'extract byte offset
@@ -1007,6 +1094,16 @@ Private Function ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                   'DBx=x ,other=0
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+                   
+'--------------------------------Create ToogleBit button------------------------------------------
+                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+                    With btn
+                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                        .name = "Btn" & iRow
+                    End With
+                              
                 Else
                    Exit For
                 End If
@@ -1056,7 +1153,7 @@ Private Function ExamineData() 'As Interface
           MsgBox "Unknown variable on: " & iRow & " " & " row"
           'todo: try to pop up some input for user to change this variable or remove
           Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-          Exit Function
+          Exit Sub
        End If
 
 '-----------------------Assign parameters for request--------------------------------------
@@ -1076,7 +1173,7 @@ Private Function ExamineData() 'As Interface
     
     Call timer
 
-End Function
+End Sub
 '-----------------------------------------------------------------------------------------------
         '  MsgBox "Breakpoint: "
 
@@ -1221,10 +1318,194 @@ Private Function MultiRead()
         Exit Function
     End If
     
-    
-    
+     'undo refreshing screen
+     Application.ScreenUpdating = True
+        
      Call timer
     'Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
+End Function
+
+Sub ToggleBit(tagByte As Integer, tagBit As Integer, tagArea As Integer, tagAreaNum As Integer, iRow As Integer)
+    
+    If ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 4) = False Then
+        res2 = daveSetBit(Verbindung.dc, tagArea, tagAreaNum, tagByte, tagBit)
+    ElseIf ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 4) = True Then
+        res2 = daveClrBit(Verbindung.dc, tagArea, tagAreaNum, tagByte, tagBit)
+    End If
+    
+End Sub
+
+
+'--------------------------------Write data on PLC--------------------------------------
+Private Function Write1()
+    Dim ph As Long, di As Long, dc As Long, iRow As Integer, dbnum As String, addrOffset As String, addrBit As String
+    Dim TagName As String, TagAdress As String, TagType_array() As String, TagCompare As String
+    Dim buffer As Byte, buffer1 As Byte, buffer2 As Byte, buffer3 As Byte
+    Dim bfbyte As Byte, bitStat As Integer, bitPos As Byte
+    Dim areaNum As Long
+    areaNum = 0 'variable for real i/o
+
+    iRow = 3
+    addrBit2 = 0
+
+    res = Initialize(ph, di, dc)
+    If res = 0 Then
+        Do Until IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3))
+            TagAdress = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+            TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value, ".")
+            TagType_array2 = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3).value, ".")
+
+            dbnum = Replace(TagType_array(0), "DB", "")
+'--------------------------------Write bit data--------------------------------------
+            If UBound(TagType_array) > 1 Then
+                addrOffset = Replace(TagType_array(1), "DBX", "")
+                addrBit = TagType_array(2)
+'Check if are in the same DB to complet the byte
+                If IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3)) Then
+                addrOffset2 = a
+                Else
+                addrOffset2 = Replace(TagType_array2(1), "DBX", "")
+                End If
+
+                If addrBit <> addrBit2 Then
+                Do Until addrBit = addrBit2
+                res2 = daveReadBytes(dc, daveDB, dbnum, addrOffset, 1, 0)
+                bfbyte = daveGetU8(dc)                                         'Copy and convert a value of 8 bit, signed or unsigned from internal buffer
+                bitStat = bfbyte And 2 ^ addrBit2
+                If bitStat > 0 Then 'Convert byte to bit
+                bitStat = 1
+                Else
+                bitStat = 0
+                End If
+
+                bitStat = bitStat * 2 ^ addrBit2                                 'Shift bit on the byte array
+                tryone = bitStat + tryone
+                addrBit2 = addrBit2 + 1
+
+                Loop
+                Else
+                End If
+                If addrOffset <> addrOffset2 And addrBit2 <> 7 Then
+                value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+
+                If value = True Then                                                'Convert string to bit
+                value = 1
+                Else
+                value = 0
+                End If
+
+                bitStat = value * 2 ^ addrBit                                       'Shift bit on the byte array
+                tryone = bitStat + tryone
+                addrBit2 = addrBit2 + 1
+
+                Do Until addrBit2 > 7
+                res2 = daveReadBytes(dc, daveDB, dbnum, addrOffset, 1, 0)
+                bfbyte = daveGetU8(dc)                                             'Copy and convert a value of 8 bit, signed or unsigned from internal buffer
+                bitStat = bfbyte And 2 ^ addrBit2
+                If bitStat > 0 Then  'Convert byte to bit
+                 bitStat = 1
+                Else
+                 bitStat = 0
+                End If
+
+                bitStat = bitStat * 2 ^ addrBit2                                      ' Shift bit on the byte array
+                tryone = bitStat + tryone
+                addrBit2 = addrBit2 + 1
+                Loop
+                Else
+                End If
+
+
+                value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+
+                If value = True Then                                                'Convert string to bit
+                value = 1
+                Else
+                value = 0
+                End If
+
+                bitStat = value * 2 ^ addrBit                                       'Shift bit on the byte array
+                tryone = bitStat + tryone
+                addrBit2 = addrBit2 + 1
+
+                If addrBit2 > 7 Then
+                res2 = davePut8(buffer, tryone)                                     'Copy and convert a value of 8 bit, signed or unsigned into a buffer
+                res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 1, buffer)     'Write a value or a block of values to PLC.
+                addrBit2 = 0
+                tryone = 0
+                Else
+                End If
+
+ '--------------------------------Write input data--------------------------------------
+            ElseIf InStr(TagType_array(0), "I") > 0 Then
+                addrOffset = Replace(TagType_array(0), "I", "")                             'Delete unnecessary Prefix in address
+                addrBit = TagType_array(1)
+
+                If Not IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)) Then     'check if cell is not empty
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+                    If value = True Then
+                        res2 = daveSetBit(dc, daveInputs, areaNum, addrOffset, addrBit)  'set bit
+                    ElseIf value = False Then
+                        res2 = daveClrBit(dc, daveInputs, areaNum, addrOffset, addrBit)  'reset bit
+                    End If
+                End If
+
+'--------------------------------Write output data--------------------------------------
+            ElseIf InStr(TagType_array(0), "Q") > 0 Then
+                addrOffset = Replace(TagType_array(0), "Q", "")                             'Delete unnecessary Prefix in address
+                addrBit = TagType_array(1)
+
+                If Not IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)) Then     'check if cell is not empty
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+                    If value = True Then
+                        res2 = daveSetBit(dc, daveOutputs, areaNum, addrOffset, addrBit)  'set bit
+                    ElseIf value = False Then
+                        res2 = daveClrBit(dc, daveOutputs, areaNum, addrOffset, addrBit)  'reset bit
+                    End If
+                End If
+
+ '--------------------------------Write dint data--------------------------------------
+            Else
+                If InStr(TagType_array(1), "DBDW") > 0 Then
+                    addrOffset = Replace(TagType_array(1), "DBDW", "")
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+
+                    res2 = davePut32(buffer3, value)                              'Copy and convert a value of 32 bit, signed or unsigned into a buffer
+                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 4, buffer3) 'Write a value or a block of values to PLC.
+
+'--------------------------------Write real data--------------------------------------
+                ElseIf InStr(TagType_array(1), "DBD") > 0 Then
+                    addrOffset = Replace(TagType_array(1), "DBD", "")
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+
+                    res2 = davePutFloat(buffer1, value)                              'Copy and convert a value of 32 bit, signed or unsigned into a buffer
+                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 4, buffer1) 'Write a value or a block of values to PLC.
+
+'--------------------------------Write word data--------------------------------------
+                ElseIf InStr(TagType_array(1), "DBW") > 0 Then
+                    addrOffset = Replace(TagType_array(1), "DBW", "")
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+
+                    res2 = davePut16(buffer2, value)                                 'Copy and convert a value of 16 bit, signed or unsigned into a buffer
+                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 2, buffer2) 'Write a value or a block of values to PLC.
+
+'--------------------------------Write byte data--------------------------------------
+                ElseIf InStr(TagType_array(1), "DBB") > 0 Then
+                    addrOffset = Replace(TagType_array(1), "DBB", "")
+
+                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
+
+                    res2 = davePut8(buffer, value)                                  'Copy and convert a value of 8 bit, signed or unsigned into a buffer
+                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 1, buffer) 'Write a value or a block of values to PLC.
+
+                End If
+            End If
+            iRow = iRow + 1
+        Loop
+    Else
+        MsgBox "No route PLC, check connection and settings"
+    End If
+        'Call cleanUp(ph, di, dc)
 End Function
 
 
@@ -1233,7 +1514,7 @@ Sub importTags()
 'todo: import .asc and delete blocks and other not used variables
     Dim FileToOpen As Variant
     Dim OpenBook As Workbook
-    Dim LastCell As String
+    Dim lastCell As String
     Dim tempString As String
     
     
@@ -1245,18 +1526,20 @@ Sub importTags()
         'open file
         Set OpenBook = Application.Workbooks.Open(FileToOpen)
 '-----------------------------Variables names-----------------------------------
-        LastCell = OpenBook.Sheets(1).Cells(Rows.Count, "A").End(xlUp).Row 'search for last not empty cell
-
-        OpenBook.Sheets(1).Range(Cells(2, "A"), Cells(LastCell, "A")).Copy 'copy variable names from first column A2->A,Lastcell
+        lastCell = OpenBook.Sheets(1).Cells(Rows.Count, "A").End(xlUp).row 'search for last not empty cell
+        
+        Call ClearContents("B") 'clear old variables before import
+                
+        OpenBook.Sheets(1).Range(Cells(2, "A"), Cells(lastCell, "A")).Copy 'copy variable names from first column A2->A,Lastcell
         ThisWorkbook.Worksheets("VarTab").Range("B3").PasteSpecial xlPasteValues 'paste variables
 
 '-----------------------------Absolute address ---------------------------------
-        LastCell = OpenBook.Sheets(1).Cells(Rows.Count, "D").End(xlUp).Row 'search for last not empty cell
-        OpenBook.Sheets(1).Range(Cells(2, "D"), Cells(LastCell, "D")).Copy 'copy variable address from first column
+        lastCell = OpenBook.Sheets(1).Cells(Rows.Count, "D").End(xlUp).row 'search for last not empty cell
+        OpenBook.Sheets(1).Range(Cells(2, "D"), Cells(lastCell, "D")).Copy 'copy variable address from first column
         ThisWorkbook.Worksheets("VarTab").Range("C3").PasteSpecial xlPasteValues 'paste variables
         
         'remove from addresses "%" sign
-        For t_i = 3 To LastCell + 2
+        For t_i = 3 To lastCell + 2
             tempString = ThisWorkbook.Worksheets("VarTab").Cells(t_i, "C").value
             ThisWorkbook.Worksheets("VarTab").Cells(t_i, "C").value = Replace(tempString, "%", "")
         Next
@@ -1267,6 +1550,38 @@ Sub importTags()
     End If
     
     Application.ScreenUpdating = True 'turn on back flickering screen
+End Sub
+
+Sub RemoveVariables()
+    Call ClearContents("B")
+End Sub
+
+Sub ClearContents(row As String)
+        'check which row has highest last cell
+        lastCellD = ThisWorkbook.Worksheets("VarTab").Cells(Rows.Count, "D").End(xlUp).row
+        lastCell = lastCellD
+        
+        'if we want to delete 3 rows
+        If row = "B" Then
+            lastCellC = ThisWorkbook.Worksheets("VarTab").Cells(Rows.Count, "C").End(xlUp).row
+            If lastCellC > lastCell Then
+                lastCell = lastCellC
+            End If
+            
+            lastCellB = ThisWorkbook.Worksheets("VarTab").Cells(Rows.Count, "B").End(xlUp).row
+            If lastCellB > lastCell Then
+                lastCell = lastCellB
+            End If
+        End If
+        
+        'if we have at least one entry
+        If lastCell > 2 Then
+            ThisWorkbook.Worksheets("VarTab").Range(Cells(3, row), Cells(lastCell, "D")).Clear
+        End If
+        
+        'delete all set/reset/write buttons
+        Call DeleteBtn
+
 End Sub
 
 Sub ToggleCell()
@@ -1282,7 +1597,7 @@ Sub ToggleCell()
 
 End Sub
 
-Sub timer()
+Private Sub timer()
     
     'MsgBox "timer"
          
@@ -1290,7 +1605,41 @@ Sub timer()
         Application.OnTime Now() + TimeValue("00:00:01"), "MultiRead"
     Else
         Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
+        Call ClearContents("D")
     End If
 End Sub
 
+Sub LockCell()
+    'fix it
+    Worksheets("VarTab").Range("A3:B3").Locked = True
+    ActiveSheet.Protect Password:="rydzak30"
 
+End Sub
+'delete all set/reset/write buttons
+Sub DeleteBtn()
+For Each btn In ActiveSheet.Buttons
+    If btn.name <> "Import" And btn.name <> "Remove" And btn.name <> "Monitor" Then
+        btn.Delete
+    End If
+Next
+End Sub
+Sub a()
+  Dim btn As Button
+  Application.ScreenUpdating = False
+  ActiveSheet.Buttons.Delete
+  Dim t As Range
+  For i = 2 To 6 Step 2
+    Set t = ActiveSheet.Range(Cells(i, 3), Cells(i, 3))
+    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+    With btn
+      .OnAction = "btnS"
+      .Caption = "Btn " & i
+      .name = "Btn" & i
+    End With
+  Next i
+  Application.ScreenUpdating = True
+End Sub
+
+Sub btnS()
+ MsgBox Application.Caller
+End Sub
