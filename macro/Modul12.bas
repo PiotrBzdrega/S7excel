@@ -1171,6 +1171,9 @@ Private Sub ExamineData() 'As Interface
 
     Loop
     
+    'undo refreshing screen
+     Application.ScreenUpdating = True
+     
     Call timer
 
 End Sub
@@ -1318,8 +1321,7 @@ Private Function MultiRead()
         Exit Function
     End If
     
-     'undo refreshing screen
-     Application.ScreenUpdating = True
+     
         
      Call timer
     'Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
@@ -1511,10 +1513,10 @@ End Function
 
 
 Sub importTags()
-'todo: import .asc and delete blocks and other not used variables
+'todo: import .asc
     Dim FileToOpen As Variant
     Dim OpenBook As Workbook
-    Dim lastCell As String
+    Dim lastCellA As String, lastCellD As String, lastCellE As String
     Dim tempString As String
     
     
@@ -1525,26 +1527,45 @@ Sub importTags()
     If FileToOpen <> False Then
         'open file
         Set OpenBook = Application.Workbooks.Open(FileToOpen)
-'-----------------------------Variables names-----------------------------------
-        lastCell = OpenBook.Sheets(1).Cells(Rows.Count, "A").End(xlUp).row 'search for last not empty cell
         
-        Call ClearContents("B") 'clear old variables before import
-                
-        OpenBook.Sheets(1).Range(Cells(2, "A"), Cells(lastCell, "A")).Copy 'copy variable names from first column A2->A,Lastcell
-        ThisWorkbook.Worksheets("VarTab").Range("B3").PasteSpecial xlPasteValues 'paste variables
+
+        lastCellA = OpenBook.Sheets(1).Cells(Rows.Count, "A").End(xlUp).row 'search for last not empty cell
+        lastCellD = OpenBook.Sheets(1).Cells(Rows.Count, "D").End(xlUp).row 'search for last not empty cell
+        lastCellE = OpenBook.Sheets(1).Cells(Rows.Count, "E").End(xlUp).row 'search for last not empty cell
+        
+        If lastCellA > 1 Or lastCellD > 1 Or lastCellE > 1 Then
+            Call ClearContents("A") 'clear old variables before import
+                        
+'-----------------------------Variables names-----------------------------------
+            If lastCellA > 1 Then
+                OpenBook.Sheets(1).Range(Cells(2, "A"), Cells(lastCellA, "A")).Copy 'copy variable names from first column A2->A,Lastcell
+                ThisWorkbook.Worksheets("VarTab").Range("B3").PasteSpecial xlPasteValues 'paste variables
+            End If
+
+'-----------------------------Comments-----------------------------------
+            If lastCellE > 1 Then
+                OpenBook.Sheets(1).Range(Cells(2, "E"), Cells(lastCellE, "E")).Copy 'copy variable names from first column A2->A,Lastcell
+                ThisWorkbook.Worksheets("VarTab").Range("A3").PasteSpecial xlPasteValues 'paste variables
+            End If
 
 '-----------------------------Absolute address ---------------------------------
-        lastCell = OpenBook.Sheets(1).Cells(Rows.Count, "D").End(xlUp).row 'search for last not empty cell
-        OpenBook.Sheets(1).Range(Cells(2, "D"), Cells(lastCell, "D")).Copy 'copy variable address from first column
-        ThisWorkbook.Worksheets("VarTab").Range("C3").PasteSpecial xlPasteValues 'paste variables
+            If lastCellD > 1 Then
+                OpenBook.Sheets(1).Range(Cells(2, "D"), Cells(lastCellD, "D")).Copy 'copy variable address from first column
+                ThisWorkbook.Worksheets("VarTab").Range("C3").PasteSpecial xlPasteValues 'paste variables
+            
+                'remove from addresses "%" sign
+                For t_i = 3 To lastCellD + 1
+                    tempString = ThisWorkbook.Worksheets("VarTab").Cells(t_i, "C").value
+                    ThisWorkbook.Worksheets("VarTab").Cells(t_i, "C").value = Replace(tempString, "%", "")
+                Next
+            End If
+            
+            OpenBook.Close False
+        Else
+            MsgBox "File Empty"
+        End If
+                 
         
-        'remove from addresses "%" sign
-        For t_i = 3 To lastCell + 2
-            tempString = ThisWorkbook.Worksheets("VarTab").Cells(t_i, "C").value
-            ThisWorkbook.Worksheets("VarTab").Cells(t_i, "C").value = Replace(tempString, "%", "")
-        Next
-        
-        OpenBook.Close False
     Else
         MsgBox "File didn't opened"
     End If
@@ -1552,8 +1573,90 @@ Sub importTags()
     Application.ScreenUpdating = True 'turn on back flickering screen
 End Sub
 
+Sub exportTags()
+    'todo: add comments and data type
+    Dim FlSv As Variant
+    Dim MyFile As String
+    Dim sh As Worksheet
+    
+    'turn off refreshing screen
+     Application.ScreenUpdating = False
+    
+    lastCell = ThisWorkbook.Worksheets("VarTab").Cells(Rows.Count, "C").End(xlUp).row 'search for last not empty cell
+    
+    'check if sheet is not empty
+    If lastCell < 3 Then
+        GoTo LastLine
+    End If
+        
+    Sheets.Add
+    ActiveSheet.name = "PLC Tags"
+
+    
+    
+'--------------------------------------------Add headers------------------------------------------
+    ThisWorkbook.Worksheets("PLC Tags").Range("A1").value = "Name"
+    ThisWorkbook.Worksheets("PLC Tags").Range("B1").value = "Path"
+    ThisWorkbook.Worksheets("PLC Tags").Range("C1").value = "Data Type"
+    ThisWorkbook.Worksheets("PLC Tags").Range("D1").value = "Logical Address"
+    ThisWorkbook.Worksheets("PLC Tags").Range("E1").value = "Comment"
+    ThisWorkbook.Worksheets("PLC Tags").Range("F1").value = "Hmi Visible"
+    ThisWorkbook.Worksheets("PLC Tags").Range("G1").value = "Hmi Accessible"
+    ThisWorkbook.Worksheets("PLC Tags").Range("H1").value = "Hmi Writeable"
+    ThisWorkbook.Worksheets("PLC Tags").Range("I1").value = "Typeobject ID"
+    ThisWorkbook.Worksheets("PLC Tags").Range("J1").value = "Version ID"
+    ThisWorkbook.Worksheets("PLC Tags").Range("K1").value = "BelongsToUnit"
+    
+    
+'--------------------------------------------Copy addresses------------------------------------------
+    ThisWorkbook.Worksheets("VarTab").Range("C3:C" & lastCell).Copy 'copy variable names from first column A2->A,Lastcell
+    MsgBox "123"
+    ThisWorkbook.Worksheets("PLC Tags").Range("D2").PasteSpecial xlPasteValues 'paste variables
+    
+'--------------------------------------------Copy Symbols--------------------------------------------
+    ThisWorkbook.Worksheets("VarTab").Range("B3:B" & lastCell).Copy 'copy variable names from first column A2->A,Lastcell
+    ThisWorkbook.Worksheets("PLC Tags").Range("A2").PasteSpecial xlPasteValues 'paste variables
+
+'--------------------------------------------Copy Comments--------------------------------------------
+'todo
+'--------------------------------------------Add Data type column-----------------------------------------
+'todo
+'--------------------------------------------Add % mark-----------------------------------------
+    For t_i = 2 To lastCell - 1
+        ThisWorkbook.Worksheets("PLC Tags").Cells(t_i, "D").value = "%" & ThisWorkbook.Worksheets("PLC Tags").Cells(t_i, "D").value
+    Next
+
+
+    
+    Set sh = Sheets("PLC Tags")
+    sh.Copy
+    
+       
+    MyFile = "PLC Tags.xlsx"
+    FlSv = Application.GetSaveAsFilename(MyFile, fileFilter:="Excel Files (*.xlsx), *.xlsx)", Title:="Enter file name")
+
+    If FlSv = False Then Exit Sub
+
+    MyFile = FlSv
+
+    With ActiveWorkbook
+        .SaveAs (MyFile), FileFormat:=51, CreateBackup:=False
+        .Close False
+    End With
+
+
+    Application.DisplayAlerts = False   'omit warning about remove worksheet
+    Worksheets("PLC Tags").Delete
+    Application.DisplayAlerts = True
+LastLine:
+
+    'undo refreshing screen
+     Application.ScreenUpdating = True
+
+End Sub
+
 Sub RemoveVariables()
-    Call ClearContents("B")
+    Call ClearContents("A")
 End Sub
 
 Sub ClearContents(row As String)
@@ -1562,7 +1665,7 @@ Sub ClearContents(row As String)
         lastCell = lastCellD
         
         'if we want to delete 3 rows
-        If row = "B" Then
+        If row = "A" Then
             lastCellC = ThisWorkbook.Worksheets("VarTab").Cells(Rows.Count, "C").End(xlUp).row
             If lastCellC > lastCell Then
                 lastCell = lastCellC
@@ -1572,11 +1675,17 @@ Sub ClearContents(row As String)
             If lastCellB > lastCell Then
                 lastCell = lastCellB
             End If
+            
+            lastCellA = ThisWorkbook.Worksheets("VarTab").Cells(Rows.Count, "A").End(xlUp).row
+            If lastCellA > lastCell Then
+                lastCell = lastCellA
+            End If
         End If
         
         'if we have at least one entry
         If lastCell > 2 Then
-            ThisWorkbook.Worksheets("VarTab").Range(Cells(3, row), Cells(lastCell, "D")).Clear
+            'ThisWorkbook.Worksheets("VarTab").Range(Cells(3, row), Cells(lastCell, "D")).Clear
+            ThisWorkbook.Worksheets("VarTab").Range(row & "3:D" & lastCell).Clear
         End If
         
         'delete all set/reset/write buttons
@@ -1622,24 +1731,4 @@ For Each btn In ActiveSheet.Buttons
         btn.Delete
     End If
 Next
-End Sub
-Sub a()
-  Dim btn As Button
-  Application.ScreenUpdating = False
-  ActiveSheet.Buttons.Delete
-  Dim t As Range
-  For i = 2 To 6 Step 2
-    Set t = ActiveSheet.Range(Cells(i, 3), Cells(i, 3))
-    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-    With btn
-      .OnAction = "btnS"
-      .Caption = "Btn " & i
-      .name = "Btn" & i
-    End With
-  Next i
-  Application.ScreenUpdating = True
-End Sub
-
-Sub btnS()
- MsgBox Application.Caller
 End Sub
