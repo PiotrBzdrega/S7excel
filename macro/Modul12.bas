@@ -1,7 +1,7 @@
 Attribute VB_Name = "Modul12"
 
 'Module variables
-Dim Verbindung As Interface
+Public Verbindung As Interface
 
 '--------------------------------Structur declaration--------------------------------------
 'Struct to save entries in ExamineData
@@ -659,24 +659,14 @@ End If
 'clean cell after disconection
 Range("a1").Interior.ColorIndex = 2
 Range("a1").value = ""
+Call ClearContents("D")
 End Sub
 
 
 'Dense variables to read data in as small amount of PDU as possible
 Private Sub ExamineData() 'As Interface
  'todo: if some unknown address exist in sheet try to pop up some input for user to change this variable or remove
-    
-'-----------------------Buttons preparation------------------------------------
-    'turn off refreshing screen to speed up code
-    Application.ScreenUpdating = False
-    'delete all set/reset/write buttons before start create new
-    Call DeleteBtn
-    Dim btn As Button   'create button object
-    Dim t As Range      'object to determine shape of button
-    
-    
-    
-    
+                 
     Dim iRow As Integer
     Dim TagType_array() As String
                                                                               
@@ -766,15 +756,11 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
-'--------------------------------Create ToogleBit button------------------------------------------
-            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-            With btn
-                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                .name = "Btn" & iRow
-            End With
-                                  
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
+                       
+                       
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(Verbindung.dataPointer).addrBit To 7
             
@@ -806,16 +792,9 @@ Private Sub ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
                    
-'--------------------------------Create ToogleBit button------------------------------------------
-                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-                    With btn
-                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                        .name = "Btn" & iRow
-                        
-                    End With
-                   
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
                 Else
                    Exit For
                 End If
@@ -829,6 +808,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write Byte--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 136, 55)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Byte"
                                                 
 '--------------------------------Decode Input word--------------------------------------
           ElseIf InStr(TagType_array(0), "IW") > 0 Then                                          'word recognize
@@ -839,6 +822,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
+'--------------------------------Create artificial double click Write Word--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 255, 102)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Word"
+            
 '--------------------------------Decode Input dword--------------------------------------
           ElseIf InStr(TagType_array(0), "ID") > 0 Then                                          'word recognize
             Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(0), "ID", "")                   'extract byte offset
@@ -847,6 +834,11 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write DWord--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 102, 255)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write DWord"
+            
           End If
           
 '--------------------------------Decode Output data--------------------------------------
@@ -862,15 +854,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
-'--------------------------------Create ToogleBit button------------------------------------------
-            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-            With btn
-                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                .name = "Btn" & iRow
-            End With
-            
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
+                        
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(dataPointer).addrBit To 7
             
@@ -902,14 +889,9 @@ Private Sub ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
                    
-'--------------------------------Create ToogleBit button------------------------------------------
-                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-                    With btn
-                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                        .name = "Btn" & iRow
-                    End With
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
                    
                 Else
                    Exit For
@@ -925,6 +907,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write Byte--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 136, 55)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Byte"
                                                 
 '--------------------------------Decode Output word--------------------------------------
           ElseIf InStr(TagType_array(0), "QW") > 0 Then                                          'word recognize
@@ -935,6 +921,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
+'--------------------------------Create artificial double click Write Word--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 255, 102)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Word"
+            
 '--------------------------------Decode Output dword--------------------------------------
           ElseIf InStr(TagType_array(0), "QD") > 0 Then                                          'word recognize
             Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(0), "QD", "")                   'extract byte offset
@@ -943,6 +933,11 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write DWord--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 102, 255)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write DWord"
+            
           End If
 '--------------------------------Decode Marker data--------------------------------------
        ElseIf InStr(TagType_array(0), "M") > 0 Then
@@ -957,14 +952,9 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
-'--------------------------------Create ToogleBit button------------------------------------------
-            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-            With btn
-                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                .name = "Btn" & iRow
-            End With
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
             
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(Verbindung.dataPointer).addrBit To 7
@@ -997,14 +987,9 @@ Private Sub ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
                    
-'--------------------------------Create ToogleBit button------------------------------------------
-                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-                    With btn
-                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                        .name = "Btn" & iRow
-                    End With
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
                    
                 Else
                    Exit For
@@ -1021,6 +1006,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write Byte--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 136, 55)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Byte"
                                                 
 '--------------------------------Decode Marker word--------------------------------------
           ElseIf InStr(TagType_array(0), "MW") > 0 Then                                          'word recognize
@@ -1031,6 +1020,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
+'--------------------------------Create artificial double click Write Word--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 255, 102)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Word"
+            
 '--------------------------------Decode Marker dword--------------------------------------
           ElseIf InStr(TagType_array(0), "MD") > 0 Then                                          'word recognize
             Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(0), "MD", "")                   'extract byte offset
@@ -1039,6 +1032,11 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = 0                                                     'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write DWord--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 102, 255)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write DWord"
+            
           End If
        
 '--------------------------------Decode DB data--------------------------------------
@@ -1054,15 +1052,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
-'--------------------------------Create ToogleBit button------------------------------------------
-            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-            With btn
-                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                .name = "Btn" & iRow
-            End With
-                      
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
+
 '--------------------------------Check if you can fill byte by next bits-----------------------
             For t_i = Verbindung.Data(Verbindung.dataPointer).addrBit To 7
             
@@ -1095,15 +1088,10 @@ Private Sub ExamineData() 'As Interface
                    Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
                    Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
                    
-'--------------------------------Create ToogleBit button------------------------------------------
-                    Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
-                    Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
-                    With btn
-                        .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
-                        .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-                        .name = "Btn" & iRow
-                    End With
-                              
+'--------------------------------Create artificial double click Toggle Bit--------------------------
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(51, 204, 255)
+                   ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Toggle Bit"
+                   
                 Else
                    Exit For
                 End If
@@ -1119,6 +1107,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                   'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write Byte--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 136, 55)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Byte"
                                                 
 '--------------------------------Decode DB word--------------------------------------
           ElseIf InStr(TagType_array(1), "DBW") > 0 Then                                         'word recognize
@@ -1129,6 +1121,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
+'--------------------------------Create artificial double click Write Word--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 255, 102)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Word"
+            
 '--------------------------------Decode DB dword--------------------------------------
           ElseIf InStr(TagType_array(1), "DBDW") > 0 Then                                         'word recognize
             Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(1), "DBDW", "")                  'extract byte offset
@@ -1138,6 +1134,10 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
             
+'--------------------------------Create artificial double click Write DWord--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(255, 102, 255)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write DWord"
+            
 '--------------------------------Decode DB real--------------------------------------
           ElseIf InStr(TagType_array(1), "DBD") > 0 Then                                        'word recognize
             Verbindung.Data(Verbindung.dataPointer).addrOffset = Replace(TagType_array(1), "DBD", "")                 'extract byte offset
@@ -1146,6 +1146,11 @@ Private Sub ExamineData() 'As Interface
             Verbindung.Data(Verbindung.dataPointer).areaNumber = Replace(TagType_array(0), "DB", "")                   'DBx=x ,other=0
             Verbindung.Data(Verbindung.dataPointer).pduNum = Verbindung.pduNum                                                    'determine in which pdu is located answer for this data
             Verbindung.Data(Verbindung.dataPointer).reqNum = Verbindung.reqNum
+            
+'--------------------------------Create artificial double click Write Real--------------------------
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).Interior.Color = RGB(153, 204, 0)
+            ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 6).value = "Write Real"
+            
           End If
           
 '----------------------------------Unknown variable--------------------------------------
@@ -1163,22 +1168,18 @@ Private Sub ExamineData() 'As Interface
             If Verbindung.Data(Verbindung.dataPointer).bits = 1 Then
                 Verbindung.Pdu(Verbindung.pduNum).request(Verbindung.reqNum).numBytes = Verbindung.Data(Verbindung.dataPointer).bits                    'convert bits to bytes
             ElseIf Verbindung.Data(Verbindung.dataPointer).bits = 33 Then
-                Verbindung.Pdu(pduNum).request(reqNum).numBytes = (Verbindung.Data(Verbindung.dataPointer).bits - 1) / 8          'distinguish real <> dw
+                Verbindung.Pdu(Verbindung.pduNum).request(Verbindung.reqNum).numBytes = (Verbindung.Data(Verbindung.dataPointer).bits - 1) / 8          'distinguish real <> dw
             Else
-                Verbindung.Pdu(pduNum).request(Verbindung.reqNum).numBytes = Verbindung.Data(Verbindung.dataPointer).bits / 8
+                Verbindung.Pdu(Verbindung.pduNum).request(Verbindung.reqNum).numBytes = Verbindung.Data(Verbindung.dataPointer).bits / 8
             End If
        
 
     Loop
-    
-    'undo refreshing screen
-     Application.ScreenUpdating = True
-     
+         
     Call timer
 
 End Sub
-'-----------------------------------------------------------------------------------------------
-        '  MsgBox "Breakpoint: "
+
 
 '--------------------------------Read Data------------------------------------------------------
 Private Function MultiRead()
@@ -1270,6 +1271,12 @@ Private Function MultiRead()
                                     ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = False
                                     ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4).Interior.Color = RGB(255, 0, 0)
                                 End If
+                                
+                            'exit loop if exceed data range
+                            If readDataPointer >= Verbindung.dataPointer Then
+                                Exit Do
+                            End If
+                            
                             Loop
                         Else
                             'MsgBox "Data pointer outside range: " & readDataPointer & vbNewLine & "PDU units: " & t_i & ", Requests: " & t_k
@@ -1327,7 +1334,7 @@ Private Function MultiRead()
     'Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
 End Function
 
-Sub ToggleBit(tagByte As Integer, tagBit As Integer, tagArea As Integer, tagAreaNum As Integer, iRow As Integer)
+Sub ToggleBit(ByVal tagByte As Integer, ByVal tagBit As Integer, ByVal tagArea As Integer, ByVal tagAreaNum As Integer, ByVal iRow As Integer)
     
     If ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 4) = False Then
         res2 = daveSetBit(Verbindung.dc, tagArea, tagAreaNum, tagByte, tagBit)
@@ -1337,6 +1344,30 @@ Sub ToggleBit(tagByte As Integer, tagBit As Integer, tagArea As Integer, tagArea
     
 End Sub
 
+Sub WriteNonBit(ByVal tagByte As Integer, ByVal tagArea As Integer, ByVal tagAreaNum As Integer, ByVal tagValue As Variant, ByVal tagBits As Integer)
+    
+    Dim buffer As Byte 'buffer for value from cell
+    
+    
+'--------Copy and convert a value  into a buffer---------
+'--------------------------------Byte-------
+    If tagBits = 8 Then
+        res2 = davePut8(buffer, tagValue)
+'--------------------------------Word-------
+    ElseIf tagBits = 16 Then
+        res2 = davePut16(buffer, tagValue)
+'--------------------------------DWord------
+    ElseIf tagBits = 32 Then
+        res2 = davePut32(buffer, tagValue)
+'--------------------------------Real-------
+    ElseIf tagBits = 33 Then
+        res2 = davePutFloat(buffer, tagValue)
+    End If
+                                           
+     bytes = tagBits \ 4
+    res2 = daveWriteBytes(Verbindung.dc, tagArea, tagAreaNum, tagByte, bytes, buffer) 'Write a value or a block of values to PLC.
+   
+End Sub
 
 '--------------------------------Write data on PLC--------------------------------------
 Private Function Write1()
@@ -1578,80 +1609,81 @@ Sub exportTags()
     Dim FlSv As Variant
     Dim MyFile As String
     Dim sh As Worksheet
-    
-    'turn off refreshing screen
-     Application.ScreenUpdating = False
+      
     
     lastCell = ThisWorkbook.Worksheets("VarTab").Cells(Rows.Count, "C").End(xlUp).row 'search for last not empty cell
     
     'check if sheet is not empty
-    If lastCell < 3 Then
-        GoTo LastLine
-    End If
+    If lastCell > 2 Then
+    
+        'turn off refreshing screen
+        Application.ScreenUpdating = False
+    
+        Sheets.Add
+        ActiveSheet.name = "PLC Tags"
+    
         
-    Sheets.Add
-    ActiveSheet.name = "PLC Tags"
-
+        
+    '--------------------------------------------Add headers------------------------------------------
+        ThisWorkbook.Worksheets("PLC Tags").Range("A1").value = "Name"
+        ThisWorkbook.Worksheets("PLC Tags").Range("B1").value = "Path"
+        ThisWorkbook.Worksheets("PLC Tags").Range("C1").value = "Data Type"
+        ThisWorkbook.Worksheets("PLC Tags").Range("D1").value = "Logical Address"
+        ThisWorkbook.Worksheets("PLC Tags").Range("E1").value = "Comment"
+        ThisWorkbook.Worksheets("PLC Tags").Range("F1").value = "Hmi Visible"
+        ThisWorkbook.Worksheets("PLC Tags").Range("G1").value = "Hmi Accessible"
+        ThisWorkbook.Worksheets("PLC Tags").Range("H1").value = "Hmi Writeable"
+        ThisWorkbook.Worksheets("PLC Tags").Range("I1").value = "Typeobject ID"
+        ThisWorkbook.Worksheets("PLC Tags").Range("J1").value = "Version ID"
+        ThisWorkbook.Worksheets("PLC Tags").Range("K1").value = "BelongsToUnit"
+        
+        
+    '--------------------------------------------Copy addresses------------------------------------------
+        ThisWorkbook.Worksheets("VarTab").Range("C3:C" & lastCell).Copy 'copy variable names from first column A2->A,Lastcell
+    
+        ThisWorkbook.Worksheets("PLC Tags").Range("D2").PasteSpecial xlPasteValues 'paste variables
+        
+    '--------------------------------------------Copy Symbols--------------------------------------------
+        ThisWorkbook.Worksheets("VarTab").Range("B3:B" & lastCell).Copy 'copy variable names from first column A2->A,Lastcell
+        ThisWorkbook.Worksheets("PLC Tags").Range("A2").PasteSpecial xlPasteValues 'paste variables
+    
+    '--------------------------------------------Copy Comments--------------------------------------------
+    'todo
+    '--------------------------------------------Add Data type column-----------------------------------------
+    'todo
+    '--------------------------------------------Add % mark-----------------------------------------
+        For t_i = 2 To lastCell - 1
+            ThisWorkbook.Worksheets("PLC Tags").Cells(t_i, "D").value = "%" & ThisWorkbook.Worksheets("PLC Tags").Cells(t_i, "D").value
+        Next
     
     
-'--------------------------------------------Add headers------------------------------------------
-    ThisWorkbook.Worksheets("PLC Tags").Range("A1").value = "Name"
-    ThisWorkbook.Worksheets("PLC Tags").Range("B1").value = "Path"
-    ThisWorkbook.Worksheets("PLC Tags").Range("C1").value = "Data Type"
-    ThisWorkbook.Worksheets("PLC Tags").Range("D1").value = "Logical Address"
-    ThisWorkbook.Worksheets("PLC Tags").Range("E1").value = "Comment"
-    ThisWorkbook.Worksheets("PLC Tags").Range("F1").value = "Hmi Visible"
-    ThisWorkbook.Worksheets("PLC Tags").Range("G1").value = "Hmi Accessible"
-    ThisWorkbook.Worksheets("PLC Tags").Range("H1").value = "Hmi Writeable"
-    ThisWorkbook.Worksheets("PLC Tags").Range("I1").value = "Typeobject ID"
-    ThisWorkbook.Worksheets("PLC Tags").Range("J1").value = "Version ID"
-    ThisWorkbook.Worksheets("PLC Tags").Range("K1").value = "BelongsToUnit"
+        
+        Set sh = Sheets("PLC Tags")
+        sh.Copy
+        
+           
+        MyFile = "PLC Tags.xlsx"
+        FlSv = Application.GetSaveAsFilename(MyFile, fileFilter:="Excel Files (*.xlsx), *.xlsx)", Title:="Enter file name")
+    
+        If FlSv = False Then Exit Sub
+    
+        MyFile = FlSv
+    
+        With ActiveWorkbook
+            .SaveAs (MyFile), FileFormat:=51, CreateBackup:=False
+            .Close False
+        End With
     
     
-'--------------------------------------------Copy addresses------------------------------------------
-    ThisWorkbook.Worksheets("VarTab").Range("C3:C" & lastCell).Copy 'copy variable names from first column A2->A,Lastcell
-    MsgBox "123"
-    ThisWorkbook.Worksheets("PLC Tags").Range("D2").PasteSpecial xlPasteValues 'paste variables
-    
-'--------------------------------------------Copy Symbols--------------------------------------------
-    ThisWorkbook.Worksheets("VarTab").Range("B3:B" & lastCell).Copy 'copy variable names from first column A2->A,Lastcell
-    ThisWorkbook.Worksheets("PLC Tags").Range("A2").PasteSpecial xlPasteValues 'paste variables
-
-'--------------------------------------------Copy Comments--------------------------------------------
-'todo
-'--------------------------------------------Add Data type column-----------------------------------------
-'todo
-'--------------------------------------------Add % mark-----------------------------------------
-    For t_i = 2 To lastCell - 1
-        ThisWorkbook.Worksheets("PLC Tags").Cells(t_i, "D").value = "%" & ThisWorkbook.Worksheets("PLC Tags").Cells(t_i, "D").value
-    Next
-
-
-    
-    Set sh = Sheets("PLC Tags")
-    sh.Copy
-    
-       
-    MyFile = "PLC Tags.xlsx"
-    FlSv = Application.GetSaveAsFilename(MyFile, fileFilter:="Excel Files (*.xlsx), *.xlsx)", Title:="Enter file name")
-
-    If FlSv = False Then Exit Sub
-
-    MyFile = FlSv
-
-    With ActiveWorkbook
-        .SaveAs (MyFile), FileFormat:=51, CreateBackup:=False
-        .Close False
-    End With
-
-
-    Application.DisplayAlerts = False   'omit warning about remove worksheet
-    Worksheets("PLC Tags").Delete
-    Application.DisplayAlerts = True
-LastLine:
-
-    'undo refreshing screen
-     Application.ScreenUpdating = True
+        Application.DisplayAlerts = False   'omit warning about remove worksheet
+        Worksheets("PLC Tags").Delete
+        Application.DisplayAlerts = True
+        
+        'undo refreshing screen
+        Application.ScreenUpdating = True
+    Else
+        MsgBox " Sheet is empty"
+    End If
 
 End Sub
 
@@ -1685,11 +1717,11 @@ Sub ClearContents(row As String)
         'if we have at least one entry
         If lastCell > 2 Then
             'ThisWorkbook.Worksheets("VarTab").Range(Cells(3, row), Cells(lastCell, "D")).Clear
-            ThisWorkbook.Worksheets("VarTab").Range(row & "3:D" & lastCell).Clear
+            ThisWorkbook.Worksheets("VarTab").Range(row & "3:F" & lastCell).Clear
         End If
         
         'delete all set/reset/write buttons
-        Call DeleteBtn
+        'Call DeleteBtn
 
 End Sub
 
@@ -1699,6 +1731,7 @@ Sub ToggleCell()
         Range("a1").Interior.ColorIndex = 2
         Range("a1").value = ""
     Else
+        
         Range("a1").Interior.ColorIndex = 4
         Range("a1").value = "Monitor on"
         Call ExamineData
@@ -1714,7 +1747,6 @@ Private Sub timer()
         Application.OnTime Now() + TimeValue("00:00:01"), "MultiRead"
     Else
         Call cleanUp(Verbindung.ph, Verbindung.di, Verbindung.dc)
-        Call ClearContents("D")
     End If
 End Sub
 
@@ -1727,8 +1759,19 @@ End Sub
 'delete all set/reset/write buttons
 Sub DeleteBtn()
 For Each btn In ActiveSheet.Buttons
-    If btn.name <> "Import" And btn.name <> "Remove" And btn.name <> "Monitor" Then
+    If btn.name <> "Import" And btn.name <> "Remove" And btn.name <> "Monitor" And btn.name <> "Export" Then
         btn.Delete
     End If
 Next
+End Sub
+'old function; don't work but .onaction syntax is very useful
+Sub createBtn()
+'--------------------------------Create ToogleBit button------------------------------------------
+            Set t = ActiveSheet.Range(Cells(iRow, 6), Cells(iRow, 6))
+            Set btn = ActiveSheet.Buttons.Add(t.Left, t.Top, t.Width, t.Height)
+            With btn
+                .OnAction = "'ToggleBit " & Verbindung.Data(Verbindung.dataPointer).addrOffset & "," & Verbindung.Data(Verbindung.dataPointer).addrBit & "," & Verbindung.Data(Verbindung.dataPointer).area & "," & Verbindung.Data(Verbindung.dataPointer).areaNumber & "," & iRow & " '"
+                .Caption = "Toggle " & ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
+                .name = "Btn" & iRow
+            End With
 End Sub
