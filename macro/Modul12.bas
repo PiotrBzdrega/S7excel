@@ -1286,7 +1286,7 @@ Private Function MultiRead()
                     And Verbindung.Data(readDataPointer).bits = 8 _
                     And Verbindung.Data(readDataPointer).reqNum = t_k _
                     And Verbindung.Data(readDataPointer).pduNum = t_i Then
-                        ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = daveGetS8(Verbindung.dc)
+                        ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = daveGetU8(Verbindung.dc)
 '-----------------------------Decode word,int-------------------------------------
                     ElseIf Verbindung.Pdu(t_i).request(t_k).numBytes = 2 _
                     And Verbindung.Data(readDataPointer).reqNum = t_k _
@@ -1305,7 +1305,7 @@ Private Function MultiRead()
                     And Verbindung.Data(readDataPointer).reqNum = t_k _
                     And Verbindung.Data(readDataPointer).pduNum = t_i _
                     And Verbindung.Data(readDataPointer).bits = 33 Then
-                        ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = daveGetFloat(Verbindung.dc)
+                        ActiveWorkbook.Worksheets("VarTab").Cells(cellPointer, 4) = Round(CDbl(daveGetFloat(Verbindung.dc)), 4)   'string to double, then round to 4 decimal position
                         
                     Else
                         MsgBox "PDU units: " & t_i & ", Requests: " & t_k & " not found. " & vbNewLine & "Cell: " & cellPointer & ", Data: " & readDataPointer
@@ -1349,6 +1349,15 @@ Sub WriteNonBit(ByVal tagByte As Integer, ByVal tagArea As Integer, ByVal tagAre
     Dim buffer As Byte 'buffer for value from cell
     
     
+    
+'bits Interior.Color = RGB(51, 204, 255)
+'byte Interior.Color = RGB(255, 136, 55)
+'word Interior.Color = RGB(255, 255, 102)
+'dword Interior.Color = RGB(255, 102, 255)
+'real Interior.Color = RGB(153, 204, 0)
+    
+    
+    
 '--------Copy and convert a value  into a buffer---------
 '--------------------------------Byte-------
     If tagBits = 8 Then
@@ -1364,184 +1373,10 @@ Sub WriteNonBit(ByVal tagByte As Integer, ByVal tagArea As Integer, ByVal tagAre
         res2 = davePutFloat(buffer, tagValue)
     End If
                                            
-     bytes = tagBits \ 4
+     bytes = tagBits \ 8
     res2 = daveWriteBytes(Verbindung.dc, tagArea, tagAreaNum, tagByte, bytes, buffer) 'Write a value or a block of values to PLC.
    
 End Sub
-
-'--------------------------------Write data on PLC--------------------------------------
-Private Function Write1()
-    Dim ph As Long, di As Long, dc As Long, iRow As Integer, dbnum As String, addrOffset As String, addrBit As String
-    Dim TagName As String, TagAdress As String, TagType_array() As String, TagCompare As String
-    Dim buffer As Byte, buffer1 As Byte, buffer2 As Byte, buffer3 As Byte
-    Dim bfbyte As Byte, bitStat As Integer, bitPos As Byte
-    Dim areaNum As Long
-    areaNum = 0 'variable for real i/o
-
-    iRow = 3
-    addrBit2 = 0
-
-    res = Initialize(ph, di, dc)
-    If res = 0 Then
-        Do Until IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3))
-            TagAdress = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value
-            TagType_array = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 3).value, ".")
-            TagType_array2 = Split(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3).value, ".")
-
-            dbnum = Replace(TagType_array(0), "DB", "")
-'--------------------------------Write bit data--------------------------------------
-            If UBound(TagType_array) > 1 Then
-                addrOffset = Replace(TagType_array(1), "DBX", "")
-                addrBit = TagType_array(2)
-'Check if are in the same DB to complet the byte
-                If IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow + 1, 3)) Then
-                addrOffset2 = a
-                Else
-                addrOffset2 = Replace(TagType_array2(1), "DBX", "")
-                End If
-
-                If addrBit <> addrBit2 Then
-                Do Until addrBit = addrBit2
-                res2 = daveReadBytes(dc, daveDB, dbnum, addrOffset, 1, 0)
-                bfbyte = daveGetU8(dc)                                         'Copy and convert a value of 8 bit, signed or unsigned from internal buffer
-                bitStat = bfbyte And 2 ^ addrBit2
-                If bitStat > 0 Then 'Convert byte to bit
-                bitStat = 1
-                Else
-                bitStat = 0
-                End If
-
-                bitStat = bitStat * 2 ^ addrBit2                                 'Shift bit on the byte array
-                tryone = bitStat + tryone
-                addrBit2 = addrBit2 + 1
-
-                Loop
-                Else
-                End If
-                If addrOffset <> addrOffset2 And addrBit2 <> 7 Then
-                value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-
-                If value = True Then                                                'Convert string to bit
-                value = 1
-                Else
-                value = 0
-                End If
-
-                bitStat = value * 2 ^ addrBit                                       'Shift bit on the byte array
-                tryone = bitStat + tryone
-                addrBit2 = addrBit2 + 1
-
-                Do Until addrBit2 > 7
-                res2 = daveReadBytes(dc, daveDB, dbnum, addrOffset, 1, 0)
-                bfbyte = daveGetU8(dc)                                             'Copy and convert a value of 8 bit, signed or unsigned from internal buffer
-                bitStat = bfbyte And 2 ^ addrBit2
-                If bitStat > 0 Then  'Convert byte to bit
-                 bitStat = 1
-                Else
-                 bitStat = 0
-                End If
-
-                bitStat = bitStat * 2 ^ addrBit2                                      ' Shift bit on the byte array
-                tryone = bitStat + tryone
-                addrBit2 = addrBit2 + 1
-                Loop
-                Else
-                End If
-
-
-                value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-
-                If value = True Then                                                'Convert string to bit
-                value = 1
-                Else
-                value = 0
-                End If
-
-                bitStat = value * 2 ^ addrBit                                       'Shift bit on the byte array
-                tryone = bitStat + tryone
-                addrBit2 = addrBit2 + 1
-
-                If addrBit2 > 7 Then
-                res2 = davePut8(buffer, tryone)                                     'Copy and convert a value of 8 bit, signed or unsigned into a buffer
-                res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 1, buffer)     'Write a value or a block of values to PLC.
-                addrBit2 = 0
-                tryone = 0
-                Else
-                End If
-
- '--------------------------------Write input data--------------------------------------
-            ElseIf InStr(TagType_array(0), "I") > 0 Then
-                addrOffset = Replace(TagType_array(0), "I", "")                             'Delete unnecessary Prefix in address
-                addrBit = TagType_array(1)
-
-                If Not IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)) Then     'check if cell is not empty
-                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-                    If value = True Then
-                        res2 = daveSetBit(dc, daveInputs, areaNum, addrOffset, addrBit)  'set bit
-                    ElseIf value = False Then
-                        res2 = daveClrBit(dc, daveInputs, areaNum, addrOffset, addrBit)  'reset bit
-                    End If
-                End If
-
-'--------------------------------Write output data--------------------------------------
-            ElseIf InStr(TagType_array(0), "Q") > 0 Then
-                addrOffset = Replace(TagType_array(0), "Q", "")                             'Delete unnecessary Prefix in address
-                addrBit = TagType_array(1)
-
-                If Not IsEmpty(ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)) Then     'check if cell is not empty
-                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-                    If value = True Then
-                        res2 = daveSetBit(dc, daveOutputs, areaNum, addrOffset, addrBit)  'set bit
-                    ElseIf value = False Then
-                        res2 = daveClrBit(dc, daveOutputs, areaNum, addrOffset, addrBit)  'reset bit
-                    End If
-                End If
-
- '--------------------------------Write dint data--------------------------------------
-            Else
-                If InStr(TagType_array(1), "DBDW") > 0 Then
-                    addrOffset = Replace(TagType_array(1), "DBDW", "")
-                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-
-                    res2 = davePut32(buffer3, value)                              'Copy and convert a value of 32 bit, signed or unsigned into a buffer
-                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 4, buffer3) 'Write a value or a block of values to PLC.
-
-'--------------------------------Write real data--------------------------------------
-                ElseIf InStr(TagType_array(1), "DBD") > 0 Then
-                    addrOffset = Replace(TagType_array(1), "DBD", "")
-                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-
-                    res2 = davePutFloat(buffer1, value)                              'Copy and convert a value of 32 bit, signed or unsigned into a buffer
-                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 4, buffer1) 'Write a value or a block of values to PLC.
-
-'--------------------------------Write word data--------------------------------------
-                ElseIf InStr(TagType_array(1), "DBW") > 0 Then
-                    addrOffset = Replace(TagType_array(1), "DBW", "")
-                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-
-                    res2 = davePut16(buffer2, value)                                 'Copy and convert a value of 16 bit, signed or unsigned into a buffer
-                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 2, buffer2) 'Write a value or a block of values to PLC.
-
-'--------------------------------Write byte data--------------------------------------
-                ElseIf InStr(TagType_array(1), "DBB") > 0 Then
-                    addrOffset = Replace(TagType_array(1), "DBB", "")
-
-                    value = ActiveWorkbook.Worksheets("VarTab").Cells(iRow, 5)
-
-                    res2 = davePut8(buffer, value)                                  'Copy and convert a value of 8 bit, signed or unsigned into a buffer
-                    res2 = daveWriteBytes(dc, daveDB, dbnum, addrOffset, 1, buffer) 'Write a value or a block of values to PLC.
-
-                End If
-            End If
-            iRow = iRow + 1
-        Loop
-    Else
-        MsgBox "No route PLC, check connection and settings"
-    End If
-        'Call cleanUp(ph, di, dc)
-End Function
-
-
 
 Sub importTags()
 'todo: import .asc
@@ -1665,15 +1500,17 @@ Sub exportTags()
         MyFile = "PLC Tags.xlsx"
         FlSv = Application.GetSaveAsFilename(MyFile, fileFilter:="Excel Files (*.xlsx), *.xlsx)", Title:="Enter file name")
     
-        If FlSv = False Then Exit Sub
+        If FlSv = False Then
+            ActiveWorkbook.Close SaveChanges:=False 'remove new file if user canceled saving
+        Else
+            MyFile = FlSv
     
-        MyFile = FlSv
-    
-        With ActiveWorkbook
-            .SaveAs (MyFile), FileFormat:=51, CreateBackup:=False
-            .Close False
-        End With
-    
+            With ActiveWorkbook
+                .SaveAs (MyFile), FileFormat:=51, CreateBackup:=False 'save file in directory
+                .Close False
+            End With
+            
+        End If
     
         Application.DisplayAlerts = False   'omit warning about remove worksheet
         Worksheets("PLC Tags").Delete

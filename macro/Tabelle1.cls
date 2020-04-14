@@ -33,6 +33,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
               
 '--------------------------------Value non numeric--------------------------------------
               If Not IsNumeric(value) Then
+                    ActiveWorkbook.Worksheets("VarTab").Cells(Target.row, 5) = ""
                     MsgBox "Write data cell must be numeric value"
               
 '--------------------------------Empty cell--------------------------------------
@@ -50,8 +51,12 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
 End Sub
 
 
-'bits Interior.Color = RGB(51, 204, 255)
-'byte Interior.Color = RGB(255, 136, 55)
-'word Interior.Color = RGB(255, 255, 102)
-'dword Interior.Color = RGB(255, 102, 255)
-'real Interior.Color = RGB(153, 204, 0)
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    If Range("a1").value = "Monitor on" Then
+        If (Target.Column = 3 Or Target.Column = 4) And Range("a1").value = "Monitor on" Then
+            Beep
+            MsgBox "You cannot modify this column during monitoring"
+            Cells(1, "A").Select
+        End If
+    End If
+End Sub
