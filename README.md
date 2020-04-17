@@ -8,3 +8,8 @@ example: https://youtu.be/7bycvxdYJ7M
 #Max PDU data 80B ( 20 entries daveAddVarToReadRequest())  
 #Cycle 1s read refreshing  
 #Import/Export tags (same format like TIA)  
+
+TODO:
+-import .asc files from S7 v5 
+-read/write each datatype char, signed/unsigned...
+-ask if dbdw or dbd (dword/dint or real)
